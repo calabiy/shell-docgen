@@ -1,0 +1,4 @@
+*.pl linguist-language=Perl
+
+*.sh linguist-language=Shell
+
