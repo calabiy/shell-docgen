@@ -444,7 +444,7 @@ sub _generate_documentation {
     
     # инфа о генерации
     $doc .= "---\n";
-    $doc .= "*Документация автоматически сгенерирована с помощью Perl Shell Script Documentor*\n";
+    $doc .= "*Документация автоматически сгенерирована*\n";
     
     return $doc;
 }
