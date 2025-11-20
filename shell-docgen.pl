@@ -62,7 +62,6 @@ sub _read_file {
     @{$self->{lines}} = <$fh>;
     close $fh;
     
-    # убираем переносы строк
     chomp @{$self->{lines}};
 }
 
@@ -83,14 +82,11 @@ sub _parse_header {
     my $in_header = 1;
     
     for my $line (@{$self->{lines}}) {
-        # пропуск shebang
         next if $line =~ /^#!/;
         
-        # если строка начинается с #, это комментарий
         if ($line =~ /^#\s*(.*)/) {
             my $comment = $1;
             
-            # ищем описание и использование
             if ($comment =~ /^(Описание|Description):\s*(.+)/i) {
                 $self->{description} = $2;
             } elsif ($comment =~ /^(Использование|Usage):\s*(.+)/i) {
@@ -99,7 +95,6 @@ sub _parse_header {
                 $self->{description} = $comment;
             }
         } elsif ($line =~ /\S/) {
-            # если не коммент, то заканчиваем парсинг заголовка
             last;
         }
     }
@@ -112,11 +107,10 @@ sub _find_variables {
         # поиск объявлений переменных
         if ($line =~ /^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.+)/) {
             my ($var, $value) = ($1, $2);
-            $value =~ s/^["']|["']$//g;  # убираем кавычки
+            $value =~ s/^["']|["']$//g; 
             $self->{variables}{$var} = $value;
         }
         
-        # поиск read команд
         if ($line =~ /read\s+(?:-p\s*["']([^"']+)["']\s+)?([A-Za-z_][A-Za-z0-9_]*)/) {
             my $prompt = $1 || "Ввод значения";
             my $var = $2;
@@ -131,14 +125,12 @@ sub _find_functions {
     for my $i (0..$#{$self->{lines}}) {
         my $line = $self->{lines}[$i];
         
-        # поиск функций
         if ($line =~ /^([A-Za-z_][A-Za-z0-9_]*)\s*\(\s*\)\s*{?/ || 
             $line =~ /^function\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(?/) {
             
             my $func_name = $1;
             my $description = "";
             
-            # ищем комментарий перед функцией
             if ($i > 0 && $self->{lines}[$i-1] =~ /^#\s*(.+)/) {
                 $description = $1;
             }
@@ -178,12 +170,9 @@ sub _analyze_sections {
     for my $i (0..$#{$self->{lines}}) {
         my $line = $self->{lines}[$i];
         
-        # пропуск коммент заголовка
         next if $line =~ /^#!/;
         
-        # определяем секции по комментариям
         if ($line =~ /^#\s*={3,}/) {
-            # разделитель секций
             push @sections, $current_section if @{$current_section->{commands}};
             $current_section = {
                 name => "Секция",
@@ -209,7 +198,6 @@ sub _analyze_sections {
 sub _analyze_command {
     my ($self, $line) = @_;
     
-    # убираем лишние пробелы
     $line =~ s/^\s+|\s+$//g;
     return undef if !$line;
     
@@ -219,8 +207,7 @@ sub _analyze_command {
         description => '',
         explanation => ''
     };
-    
-    # определяем тип команды и добавляем обяснение
+
     if ($line =~ /^if\s+/) {
         $info->{type} = 'condition';
         $info->{description} = 'Условная конструкция';
